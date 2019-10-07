@@ -7,8 +7,6 @@ import (
 
 )
 
-
-
 type BoardInfo struct {
 	Key         string `json:"key"`
 	Is_open     bool `json:"is_open"`
@@ -49,13 +47,32 @@ func (b *Board) GetBmc() error {
 	return nil
 }
 
-
 func (b *Board) init() error {
-	return nil
+	var result BoardInfo;
+	req, err := b.NewRequest("init", "POST", nil)
+	if err != nil {
+		return err
+	}
+	_, err = b.Do(req, &result)
+	if err != nil {
+		return err
+	}
+	err = b.updateFromInfo(&result)
+	return err
 }
 
 func (b *Board) open() error {
-	return nil
+	var result BoardInfo;
+	req, err := b.NewRequest("open", "POST", nil)
+	if err != nil {
+		return err
+	}
+	_, err = b.Do(req, &result)
+	if err != nil {
+		return err
+	}
+	err = b.updateFromInfo(&result)
+	return err
 }
 
 func (b *Board)  initFpgaService() error {
@@ -68,6 +85,12 @@ func (b *Board)  initFpgaService() error {
 }
 
 func (b *Board) updateFromInfo(bi *BoardInfo) error {
+	b.Key = bi.Key
+	b.Is_open = bi.Is_open
+	b.Is_init = bi.Is_init
+	b.Serial = bi.Serial
+	b.Description = bi.Description
+	b.Vendor = bi.Vendor
 
 	if bi.Open_error != nil {
 		return errors.New(bi.Open_error.Msg)
@@ -76,13 +99,6 @@ func (b *Board) updateFromInfo(bi *BoardInfo) error {
 	if bi.Init_error != nil {
 		return errors.New(bi.Init_error.Msg)
 	}
-
-	b.Key = bi.Key
-	b.Is_open = bi.Is_open
-	b.Is_init = bi.Is_init
-	b.Serial = bi.Serial
-	b.Description = bi.Description
-	b.Vendor = bi.Vendor
 
 	// update BMC info TODO
 	// update Fpga info TODO

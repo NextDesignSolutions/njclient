@@ -17,7 +17,7 @@ type Fpga struct {
 type FpgaService struct {
 	client *Board
 	prefix string
-	Fpgas map[string]Fpga
+	Fpgas map[string]*Fpga
 }
 
 func NewFpgaService(client *Board) *FpgaService {
@@ -25,7 +25,7 @@ func NewFpgaService(client *Board) *FpgaService {
 		client: client,
 		prefix:"fpgas",
 	}
-	b.Fpgas = make(map[string]Fpga)
+	b.Fpgas = make(map[string]*Fpga)
 
 	return b;
 }
