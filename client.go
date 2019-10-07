@@ -31,6 +31,11 @@ type Config struct {
 	APIVersion string
 }
 
+type NjtError struct {
+	Msg string `json:"msg"`
+	Code int `json:"code"`
+}
+
 type Client struct {
 	client  *http.Client
 	BaseURL *url.URL
@@ -65,8 +70,8 @@ func (c *Client) initBoardService() error {
 	if bs == nil {
 		return errors.New("failed to init board service")
 	}
-	c.BoardService = bs;
-	return nil;
+	c.BoardService = bs
+	return nil
 }
 
 
@@ -150,8 +155,9 @@ func main() {
 	if err != nil {
 		log.Fatalln("unable to query boards: ", err)
 	} else {
-		for key, _ := range client.BoardService.Boards {
-			log.Printf("Key:%s\n", key)
+		for _, board := range client.BoardService.Boards {
+			log.Printf("Key:%s\n", board.Key)
+//			fserv := board.FpgaService
 		}
 	}
 

@@ -15,16 +15,17 @@ type Fpga struct {
 }
 
 type FpgaService struct {
-	client *BoardService
+	client *Board
 	prefix string
 	Fpgas map[string]Fpga
 }
 
-func NewFpgaService(client *BoardService) *FpgaService {
+func NewFpgaService(client *Board) *FpgaService {
 	b := &FpgaService{
 		client: client,
-		prefix:"/fpgas",
+		prefix:"fpgas",
 	}
+	b.Fpgas = make(map[string]Fpga)
 
 	return b;
 }
