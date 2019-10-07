@@ -1,9 +1,9 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
+	"errors"
+
 )
 
 
@@ -39,22 +39,21 @@ type Board struct {
 
 
 func (b *Board) GetBmc() error {
-
-
+	return nil
 }
 
 
 func (b *Board) init() error {
-
+	return nil
 }
 
 func (b *Board) open() error {
-
+	return nil
 }
 
 type BoardService struct {
 	client *Client
-	prefix String
+	prefix string
 	Boards map[string]Board
 
 }
@@ -71,10 +70,10 @@ func NewBoardService(client *Client)  *BoardService {
 }
 
 func (bs *BoardService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	return bs.client.NewRequest(bs.prefix + urlStr, method, body);
+	return bs.client.NewRequest(bs.prefix + urlstr, method, body);
 }
 
-func (bs *BoardService) Do(req *http.Request, into interface{}) {*http.Response, error) {
+func (bs *BoardService) Do(req *http.Request, into interface{}) (*http.Response, error) {
 	return bs.client.Do(req, into)
 }
 
@@ -92,68 +91,87 @@ func (bs *BoardService) QueryBoards() error {
 	if err != nil {
 		return err
 	}
-	// as board keys are unique, we should probably use a map rather than a list
 
-
-	// update board infos
-	// this part is quite tricky
-	//case 1. board obj has not been made yet
-	//				- make new object
-	//case 2. board obj has already been made
-	//				- update existing object
-	//case 3. board obj exists but BoardInfo is not found for it
-	//				- warn that the board is no longer being detected and remove it
-
-	// for each board, set synced to False.
-
-	// for each bi, check if object exists
-		// if it does not, make a new object and start tracking it
-		// else, update its data
-		// set board.synced = True
-
-	// walk through list of boards one more time, if a board exists with synced = False,
-	// then that board went missing on the server. Warn the user, and untrack that board.
-}
-
-func (bs *BoardService)  BoardBySerial(Serial string) *Board {
-	for _, b := range bs.Boards:
-		if b.Serial == Serial {
-			return b
+	// update all boards that are already known
+	for key, value := range bs.Boards {
+		for i := len(result.Boards)-1; i >=0; i-- {
+			bi := result.Boards[i]
+			if key == bi.Key {
+				err = value.updateFromInfo(&bi)
+				if err != nil {
+					return err
+				}
+				// remove board info 
+				result.Boards = append(result.Boards[:i], result.Boards[i+1:]...)
+				break
+			}
 		}
+
+		// if wee get here, then a board has been dropped
+		// FIXME: warn user
+		err = bs.untrackBoard(key)
+		if err != nil {
+			return err
+		}
+	}
+	// board infos left in list are new and previously untracked
+	for _, bi := range result.Boards {
+		err := bs.trackNewBoard(&bi)
+		if err != nil {
+			return err;
+		}
+	}
 	return nil
 }
 
-func (bs *BoardService) BoardByKey(Key string) *Board {
-	for _, b := range bs.Boards:
-		if b.Key == Key {
-			return b
+func (bs *BoardService)  BoardBySerial(serial string) *Board {
+	for _, b := range bs.Boards {
+		if b.Serial == serial {
+			return &b
 		}
+	}
 	return nil
 }
 
-func (bs *BoardService) untrackBoard(Key string) error {
+func (bs *BoardService) BoardByKey(key string) *Board {
+	i, ok := bs.Boards[key]
+	if ok == true {
+		return &i;
+	}
 	return nil;
 }
 
-func (bs *BoardService) trackNewBoard(Key string) error {
+func (bs *BoardService) untrackBoard(key string) error {
+	delete(bs.Boards, key)
 	return nil;
 }
 
-func (b *Board) UpdatefromInfo(bi *BoardInfo) error {
+func (bs *BoardService) trackNewBoard(bi *BoardInfo) error {
+	n := Board {
+	 }
+	 err := n.updateFromInfo(bi)
+	 if err != nil {
+		return err
+	 }
+	 bs.Boards[bi.Key] = n
+	 return nil
+}
+
+func (b *Board) updateFromInfo(bi *BoardInfo) error {
 
 	if bi.Open_error != nil {
-		return errors.new(bi.Open_error.Description)
+		return errors.New(bi.Open_error.Msg)
 	}
 
 	if bi.Init_error != nil {
-		return errors.new(bi.Init_error.Description)
+		return errors.New(bi.Init_error.Msg)
 	}
 
 	b.Key = bi.Key
 	b.Is_open = bi.Is_open
 	b.Is_init = bi.Is_init
 	b.Serial = bi.Serial
-	b.description = bi.Description
+	b.Description = bi.Description
 	b.Vendor = bi.Vendor
 
 	// update BMC info TODO

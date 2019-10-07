@@ -1,4 +1,23 @@
+package main
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+)
+
+const (
+	libraryVersion = "0.1.0"
+	userAgent      = "nextjtag_client/ + libraryVersion"
+	defaultBaseURL = "http://192.168.2.57:12345"
+	mediaType      = "application/json"
+	format         = "json"
+)
 
 type VersionInfo struct {
 	Minor   int    `json:"minor"`
@@ -19,22 +38,19 @@ type Client struct {
 	BoardService *BoardService
 }
 
-func NewClient(config *Config, string api_uri, client * http.Client) *Client {
+func NewClient(config *Config, api_uri string) *Client {
 	if config.APIVersion == "" {
 		config.APIVersion = "v1"
 	}
 	baseURL, _ := url.Parse(api_uri)
 	baseURL.Path = "api/" + config.APIVersion
 
-	cl = client
-	if cl == nil {
-		cl = http.DefaultClient
-	}
+	cl := http.DefaultClient
 
 	c := &Client{
 		client: cl,
 		BaseURL: baseURL,
-		userAgent: userAgent,
+		UserAgent: userAgent,
 		Config: config,
 	}
 
@@ -44,7 +60,7 @@ func NewClient(config *Config, string api_uri, client * http.Client) *Client {
 
 func (c *Client) initBoardService() {
 	bs := &BoardService {
-			client: c
+			client: c,
 	}
 	c.BoardService = bs;
 }
@@ -60,7 +76,7 @@ func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*ht
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
-		err := json.newEncoder(buf).Encode(body)
+		err := json.NewEncoder(buf).Encode(body)
 		if err != nil {
 			return nil, err
 		}
@@ -73,8 +89,8 @@ func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*ht
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	req.Header.Set("Accept", mediatype)
-	req.header.Set("User-Agent", userAgent)
+	req.Header.Set("Accept", mediaType)
+	req.Header.Set("User-Agent", userAgent)
 
 	return req, nil
 }
@@ -104,4 +120,22 @@ func (c *Client) GetServerVersion() (*VersionInfo, error) {
 	return v, nil
 }
 
+func main() {
+	config := Config{APIVersion: "v1"}
+	log.SetOutput(os.Stdout)
 
+	api_uri := "nds-zero.nextdesign.ai:19080"
+
+	client := NewClient(&config, api_uri)
+	v, err := client.GetServerVersion()
+	if err != nil {
+		log.Fatalln("unable to get version: ", err)
+	} else {
+		fmt.Println("minor: ", v.Minor)
+		fmt.Println("major: ", v.Major)
+		fmt.Println("sha1: ", v.Sha1)
+		fmt.Println("version: ", v.Version)
+	}
+
+
+}
