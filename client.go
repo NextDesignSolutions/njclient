@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"errors"
 )
 
 const (
@@ -43,7 +44,8 @@ func NewClient(config *Config, api_uri string) *Client {
 		config.APIVersion = "v1"
 	}
 	baseURL, _ := url.Parse(api_uri)
-	baseURL.Path = "api/" + config.APIVersion
+	baseURL.Path = "api/" + config.APIVersion + "/"
+	fmt.Printf("baseURL = %s\n", baseURL)
 
 	cl := http.DefaultClient
 
@@ -58,21 +60,27 @@ func NewClient(config *Config, api_uri string) *Client {
 	return c;
 }
 
-func (c *Client) initBoardService() {
-	bs := &BoardService {
-			client: c,
+func (c *Client) initBoardService() error {
+	bs := NewBoardService(c)
+	if bs == nil {
+		return errors.New("failed to init board service")
 	}
 	c.BoardService = bs;
+	return nil;
 }
 
 
 func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
+	log.Printf("urlstr = %s\n", urlstr)
 	rel, err := url.Parse(urlstr)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Printf("rel = %s\n", rel)
+	log.Printf("base_url = %s\n", c.BaseURL)
 	u := c.BaseURL.ResolveReference(rel)
+	log.Printf("new req url = %s\n", u)
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
@@ -81,7 +89,8 @@ func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*ht
 			return nil, err
 		}
 	}
-
+	
+	log.Printf("created new request with url %s\n", u.String())
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
@@ -107,7 +116,7 @@ func (c *Client) Do(req *http.Request, into interface{}) (*http.Response, error)
 
 func (c *Client) GetServerVersion() (*VersionInfo, error) {
 	v := new(VersionInfo)
-	req, err := c.NewRequest("/version", "GET", nil)
+	req, err := c.NewRequest("version", "GET", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +133,7 @@ func main() {
 	config := Config{APIVersion: "v1"}
 	log.SetOutput(os.Stdout)
 
-	api_uri := "nds-zero.nextdesign.ai:19080"
+	api_uri := "http://nds-zero.nextdesign.ai:19080"
 
 	client := NewClient(&config, api_uri)
 	v, err := client.GetServerVersion()
@@ -137,5 +146,13 @@ func main() {
 		fmt.Println("version: ", v.Version)
 	}
 
+	err = client.BoardService.QueryBoards()
+	if err != nil {
+		log.Fatalln("unable to query boards: ", err)
+	} else {
+		for key, _ := range client.BoardService.Boards {
+			log.Printf("Key:%s\n", key)
+		}
+	}
 
 }

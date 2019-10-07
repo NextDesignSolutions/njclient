@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"errors"
+	"log"
 
 )
 
@@ -61,8 +62,9 @@ type BoardService struct {
 func NewBoardService(client *Client)  *BoardService {
 	b := &BoardService {
 		client: client,
-		prefix: "/boards",
+		prefix: "boards",
 	}
+	b.Boards = make(map[string]Board)
 
 	// initialize services here
 
@@ -70,6 +72,7 @@ func NewBoardService(client *Client)  *BoardService {
 }
 
 func (bs *BoardService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
+	log.Printf("bs.prefix = %s\n", bs.prefix)
 	return bs.client.NewRequest(bs.prefix + urlstr, method, body);
 }
 
