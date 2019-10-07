@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"errors"
 )
 
 const (
@@ -32,15 +32,15 @@ type Config struct {
 }
 
 type NjtError struct {
-	Msg string `json:"msg"`
-	Code int `json:"code"`
+	Msg  string `json:"msg"`
+	Code int    `json:"code"`
 }
 
 type Client struct {
-	client  *http.Client
-	BaseURL *url.URL
-	UserAgent string
-	Config *Config
+	client       *http.Client
+	BaseURL      *url.URL
+	UserAgent    string
+	Config       *Config
 	BoardService *BoardService
 }
 
@@ -55,14 +55,14 @@ func NewClient(config *Config, api_uri string) *Client {
 	cl := http.DefaultClient
 
 	c := &Client{
-		client: cl,
-		BaseURL: baseURL,
+		client:    cl,
+		BaseURL:   baseURL,
 		UserAgent: userAgent,
-		Config: config,
+		Config:    config,
 	}
 
 	c.initBoardService()
-	return c;
+	return c
 }
 
 func (c *Client) initBoardService() error {
@@ -73,7 +73,6 @@ func (c *Client) initBoardService() error {
 	c.BoardService = bs
 	return nil
 }
-
 
 func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
 	log.Printf("urlstr = %s\n", urlstr)
@@ -94,7 +93,7 @@ func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*ht
 			return nil, err
 		}
 	}
-	
+
 	log.Printf("created new request with url %s\n", u.String())
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
@@ -157,7 +156,7 @@ func main() {
 	} else {
 		for _, board := range client.BoardService.Boards {
 			log.Printf("Key:%s\n", board.Key)
-//			fserv := board.FpgaService
+			//			fserv := board.FpgaService
 		}
 	}
 

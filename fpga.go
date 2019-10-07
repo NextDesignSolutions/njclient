@@ -6,7 +6,7 @@ import (
 
 type FpgaInfo struct {
 	Name string `json:"name"`
-	Dna string  `json:"dna"`
+	Dna  string `json:"dna"`
 }
 
 type Fpga struct {
@@ -17,25 +17,25 @@ type Fpga struct {
 type FpgaService struct {
 	client *Board
 	prefix string
-	Fpgas map[string]*Fpga
+	Fpgas  map[string]*Fpga
 }
 
 func NewFpgaService(client *Board) *FpgaService {
 	b := &FpgaService{
 		client: client,
-		prefix:"fpgas",
+		prefix: "fpgas",
 	}
 	b.Fpgas = make(map[string]*Fpga)
 
-	return b;
+	return b
 }
 
 func (fs *FpgaService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	return fs.client.NewRequest(fs.prefix + urlstr, method, body);
+	return fs.client.NewRequest(fs.prefix+urlstr, method, body)
 }
 
 func (fs *FpgaService) Do(req *http.Request, into interface{}) (*http.Response, error) {
-	return fs.client.Do(req, into);
+	return fs.client.Do(req, into)
 }
 
 func (fs *FpgaService) QueryBoards() error {
@@ -47,7 +47,7 @@ func (fs *FpgaService) QueryBoards() error {
 	if err != nil {
 		return err
 	}
-	var result GetFpgasResult;
+	var result GetFpgasResult
 	_, err = fs.Do(req, &result)
 	if err != nil {
 		return err
@@ -59,10 +59,9 @@ func (fs *FpgaService) QueryBoards() error {
 
 func (fs *FpgaService) FpgaByDna(dna string) *Fpga {
 
-	return nil;
+	return nil
 }
 
-
 func (fs *FpgaService) UpdatefromInfo(fi *FpgaInfo) error {
-	return nil;
+	return nil
 }

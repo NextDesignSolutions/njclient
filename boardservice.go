@@ -1,20 +1,18 @@
 package main
 
 import (
-	"net/http"
 	"log"
-
+	"net/http"
 )
 
 type BoardService struct {
 	client *Client
 	prefix string
 	Boards map[string]*Board
-
 }
 
-func NewBoardService(client *Client)  *BoardService {
-	b := &BoardService {
+func NewBoardService(client *Client) *BoardService {
+	b := &BoardService{
 		client: client,
 		prefix: "boards",
 	}
@@ -22,12 +20,12 @@ func NewBoardService(client *Client)  *BoardService {
 
 	// initialize services here
 
-	return b;
+	return b
 }
 
 func (bs *BoardService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
 	log.Printf("bs.prefix = %s\n", bs.prefix)
-	return bs.client.NewRequest(bs.prefix + urlstr, method, body);
+	return bs.client.NewRequest(bs.prefix+urlstr, method, body)
 }
 
 func (bs *BoardService) Do(req *http.Request, into interface{}) (*http.Response, error) {
@@ -43,7 +41,7 @@ func (bs *BoardService) QueryBoards() error {
 	if err != nil {
 		return err
 	}
-	var result GetBoardsResult;
+	var result GetBoardsResult
 	_, err = bs.Do(req, &result)
 	if err != nil {
 		return err
@@ -51,14 +49,14 @@ func (bs *BoardService) QueryBoards() error {
 
 	// update all boards that are already known
 	for key, value := range bs.Boards {
-		for i := len(result.Boards)-1; i >=0; i-- {
+		for i := len(result.Boards) - 1; i >= 0; i-- {
 			bi := result.Boards[i]
 			if key == bi.Key {
 				err = value.updateFromInfo(&bi)
 				if err != nil {
 					return err
 				}
-				// remove board info 
+				// remove board info
 				result.Boards = append(result.Boards[:i], result.Boards[i+1:]...)
 				break
 			}
@@ -75,13 +73,13 @@ func (bs *BoardService) QueryBoards() error {
 	for _, bi := range result.Boards {
 		err := bs.trackNewBoard(&bi)
 		if err != nil {
-			return err;
+			return err
 		}
 	}
 	return nil
 }
 
-func (bs *BoardService)  BoardBySerial(serial string) *Board {
+func (bs *BoardService) BoardBySerial(serial string) *Board {
 	for _, b := range bs.Boards {
 		if b.Serial == serial {
 			return b
@@ -93,14 +91,14 @@ func (bs *BoardService)  BoardBySerial(serial string) *Board {
 func (bs *BoardService) BoardByKey(key string) *Board {
 	i, ok := bs.Boards[key]
 	if ok == true {
-		return i;
+		return i
 	}
-	return nil;
+	return nil
 }
 
 func (bs *BoardService) untrackBoard(key string) error {
 	delete(bs.Boards, key)
-	return nil;
+	return nil
 }
 
 func (bs *BoardService) trackNewBoard(bi *BoardInfo) error {
