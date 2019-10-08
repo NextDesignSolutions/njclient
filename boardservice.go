@@ -52,7 +52,7 @@ func (bs *BoardService) QueryBoards() error {
 		for i := len(result.Boards) - 1; i >= 0; i-- {
 			bi := result.Boards[i]
 			if key == bi.Key {
-				err = value.updateFromInfo(&bi)
+				err = value.UpdateFromInfo(&bi)
 				if err != nil {
 					return err
 				}
@@ -106,7 +106,7 @@ func (bs *BoardService) trackNewBoard(bi *BoardInfo) error {
 	if err != nil {
 		return err
 	}
-	err = n.updateFromInfo(bi)
+	err = n.UpdateFromInfo(bi)
 	if err != nil {
 		return err
 	}

@@ -156,7 +156,18 @@ func main() {
 	} else {
 		for _, board := range client.BoardService.Boards {
 			log.Printf("Key:%s\n", board.Key)
-			//			fserv := board.FpgaService
+			err = board.Init()
+			if err != nil {
+				log.Fatalln("failed to initialize board with key ", board.Key, err)
+			}
+			fserv := board.FpgaService
+			err = fserv.QueryFpgas()
+			if err != nil {
+				log.Printf("failed to query fpgas for board with key %s\n: %s", board.Key, err)
+			}
+			for index, fpga := range fserv.Fpgas {
+				log.Printf("FPGA index %d NAME %s DNA %s\n", index, fpga.Name, fpga.Dna)
+			}
 		}
 	}
 

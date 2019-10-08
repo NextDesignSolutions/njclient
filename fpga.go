@@ -10,58 +10,29 @@ type FpgaInfo struct {
 }
 
 type Fpga struct {
-	Name string
-	Dna  string
+	client *FpgaService
+	Index  int
+	Name   string
+	Dna    string
 }
 
-type FpgaService struct {
-	client *Board
-	prefix string
-	Fpgas  map[string]*Fpga
-}
-
-func NewFpgaService(client *Board) *FpgaService {
-	b := &FpgaService{
-		client: client,
-		prefix: "fpgas",
-	}
-	b.Fpgas = make(map[string]*Fpga)
-
-	return b
-}
-
-func (fs *FpgaService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	return fs.client.NewRequest(fs.prefix+urlstr, method, body)
-}
-
-func (fs *FpgaService) Do(req *http.Request, into interface{}) (*http.Response, error) {
-	return fs.client.Do(req, into)
-}
-
-func (fs *FpgaService) QueryBoards() error {
-	type GetFpgasResult struct {
-		Fpgas []FpgaInfo `json:"fpgas"`
-	}
-
-	req, err := fs.NewRequest("", "GET", nil)
-	if err != nil {
-		return err
-	}
-	var result GetFpgasResult
-	_, err = fs.Do(req, &result)
-	if err != nil {
-		return err
-	}
-	// handle updating fpga objects
-
+func (f *Fpga) UpdatefromInfo(fi *FpgaInfo) error {
+	f.Name = fi.Name
+	f.Dna = fi.Dna
 	return nil
 }
 
-func (fs *FpgaService) FpgaByDna(dna string) *Fpga {
-
-	return nil
+func NewFpga(service *FpgaService) (*Fpga, error) {
+	f := Fpga{
+		client: service,
+	}
+	return &f, nil
 }
 
-func (fs *FpgaService) UpdatefromInfo(fi *FpgaInfo) error {
-	return nil
+func (f *Fpga) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
+	return f.client.NewRequest("/"+string(f.Index)+"/"+urlstr, method, body)
+}
+
+func (f *Fpga) Do(req *http.Request, into interface{}) (*http.Response, error) {
+	return f.client.Do(req, into)
 }

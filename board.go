@@ -33,7 +33,9 @@ type Board struct {
 }
 
 func NewBoard(client *BoardService) (*Board, error) {
-	n := Board{}
+	n := Board{
+		client: client,
+	}
 	err := n.initFpgaService()
 	if err != nil {
 		return nil, err
@@ -45,7 +47,7 @@ func (b *Board) GetBmc() error {
 	return nil
 }
 
-func (b *Board) init() error {
+func (b *Board) Init() error {
 	var result BoardInfo
 	req, err := b.NewRequest("init", "POST", nil)
 	if err != nil {
@@ -55,11 +57,11 @@ func (b *Board) init() error {
 	if err != nil {
 		return err
 	}
-	err = b.updateFromInfo(&result)
+	err = b.UpdateFromInfo(&result)
 	return err
 }
 
-func (b *Board) open() error {
+func (b *Board) Open() error {
 	var result BoardInfo
 	req, err := b.NewRequest("open", "POST", nil)
 	if err != nil {
@@ -69,7 +71,7 @@ func (b *Board) open() error {
 	if err != nil {
 		return err
 	}
-	err = b.updateFromInfo(&result)
+	err = b.UpdateFromInfo(&result)
 	return err
 }
 
@@ -82,7 +84,7 @@ func (b *Board) initFpgaService() error {
 	return nil
 }
 
-func (b *Board) updateFromInfo(bi *BoardInfo) error {
+func (b *Board) UpdateFromInfo(bi *BoardInfo) error {
 	b.Key = bi.Key
 	b.Is_open = bi.Is_open
 	b.Is_init = bi.Is_init
@@ -105,7 +107,7 @@ func (b *Board) updateFromInfo(bi *BoardInfo) error {
 
 func (b *Board) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
 	log.Printf("b.Key = %s\n", b.Key)
-	return b.client.NewRequest(b.Key+urlstr, method, body)
+	return b.client.NewRequest("/"+b.Key+"/"+urlstr, method, body)
 }
 
 func (b *Board) Do(req *http.Request, into interface{}) (*http.Response, error) {
