@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 const (
@@ -50,7 +47,6 @@ func NewClient(config *Config, api_uri string) *Client {
 	}
 	baseURL, _ := url.Parse(api_uri)
 	baseURL.Path = "api/" + config.APIVersion + "/"
-	fmt.Printf("baseURL = %s\n", baseURL)
 
 	cl := http.DefaultClient
 
@@ -75,16 +71,16 @@ func (c *Client) initBoardService() error {
 }
 
 func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	log.Printf("urlstr = %s\n", urlstr)
+	//log.Printf("urlstr = %s\n", urlstr)
 	rel, err := url.Parse(urlstr)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("rel = %s\n", rel)
-	log.Printf("base_url = %s\n", c.BaseURL)
+	//log.Printf("rel = %s\n", rel)
+	//log.Printf("base_url = %s\n", c.BaseURL)
 	u := c.BaseURL.ResolveReference(rel)
-	log.Printf("new req url = %s\n", u)
+	//log.Printf("new req url = %s\n", u)
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
@@ -94,7 +90,7 @@ func (c *Client) NewRequest(urlstr string, method string, body interface{}) (*ht
 		}
 	}
 
-	log.Printf("created new request with url %s\n", u.String())
+	//log.Printf("created new request with url %s\n", u.String())
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
@@ -131,62 +127,4 @@ func (c *Client) GetServerVersion() (*VersionInfo, error) {
 	}
 
 	return v, nil
-}
-
-func main() {
-	config := Config{APIVersion: "v1"}
-	log.SetOutput(os.Stdout)
-
-	api_uri := "http://nds-zero.nextdesign.ai:19080"
-
-	client := NewClient(&config, api_uri)
-	v, err := client.GetServerVersion()
-	if err != nil {
-		log.Fatalln("unable to get version: ", err)
-	} else {
-		fmt.Println("minor: ", v.Minor)
-		fmt.Println("major: ", v.Major)
-		fmt.Println("sha1: ", v.Sha1)
-		fmt.Println("version: ", v.Version)
-	}
-
-	err = client.BoardService.QueryBoards()
-	if err != nil {
-		log.Fatalln("unable to query boards: ", err)
-	} else {
-		for _, board := range client.BoardService.Boards {
-			log.Printf("Key:%s\n", board.Key)
-			err = board.Init()
-			if err != nil {
-				log.Fatalln("failed to initialize board with key ", board.Key, err)
-			}
-			fserv := board.FpgaService
-			err = fserv.QueryFpgas()
-			if err != nil {
-				log.Printf("failed to query fpgas for board with key %s\n: %s", board.Key, err)
-			}
-			for index, fpga := range fserv.Fpgas {
-				log.Printf("FPGA index %d NAME %s DNA %s\n", index, fpga.Name, fpga.Dna)
-				log.Printf("axi service: %s\n", fpga.AxiService)
-
-				attr := NewAxiCacheAttributes(true, true, false, false)
-				opts := NewAxiTransactionOptions(true, 4)
-				t := NewAxiTransaction(0xc0000000, true, opts, attr, nil)
-
-				axih := fpga.AxiService.GetAvailableAxiHandle()
-				if axih == nil {
-					log.Printf("Failed to get axi handle")
-				} else {
-					result, err := axih.IssueTransaction(t)
-					if err != nil {
-						log.Printf("AXI transaction failed! %s\n", err)
-					} else {
-						log.Printf("result.Response = %s\n", result.Response)
-						log.Printf("result.Value = %x\n", (*result.Value))
-					}
-				}
-			}
-		}
-	}
-
 }

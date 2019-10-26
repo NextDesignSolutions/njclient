@@ -30,9 +30,6 @@ func (fs *FpgaService) GetFpga(index int) (*Fpga, error) {
 }
 
 func (fs *FpgaService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	log.Printf("fs.prefix = %s\n", fs.prefix)
-	log.Printf("urlstr = %s\n", urlstr)
-	log.Printf("together: %s\n", fs.prefix+urlstr)
 	return fs.client.NewRequest(fs.prefix+urlstr, method, body)
 }
 

@@ -3,7 +3,6 @@ package njclient
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -42,7 +41,6 @@ func (bs *BoardService) GetSomeBoard() (*Board, error) {
 }
 
 func (bs *BoardService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	log.Printf("bs.prefix = %s\n", bs.prefix)
 	return bs.client.NewRequest(bs.prefix+urlstr, method, body)
 }
 
