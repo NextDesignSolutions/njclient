@@ -1,4 +1,4 @@
-package main
+package njclient
 
 type BmcInfo struct {
 	Is_setup    bool      `json:"is_setup"`

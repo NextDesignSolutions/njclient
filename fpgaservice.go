@@ -1,6 +1,8 @@
-package main
+package njclient
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -17,6 +19,14 @@ func NewFpgaService(client *Board) *FpgaService {
 		prefix: "fpgas",
 	}
 	return b
+}
+
+func (fs *FpgaService) GetFpga(index int) (*Fpga, error) {
+	if index >= len(fs.Fpgas) {
+		return nil, errors.New(fmt.Sprintf("could not find FPGA with index %d", index))
+	} else {
+		return fs.Fpgas[index], nil
+	}
 }
 
 func (fs *FpgaService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {

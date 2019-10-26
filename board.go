@@ -1,8 +1,8 @@
-package main
+package njclient
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"net/http"
 )
 
@@ -106,8 +106,8 @@ func (b *Board) UpdateFromInfo(bi *BoardInfo) error {
 }
 
 func (b *Board) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	log.Printf("b.Key = %s\n", b.Key)
-	return b.client.NewRequest("/"+b.Key+"/"+urlstr, method, body)
+	msg := fmt.Sprintf("/%s/%s", b.Key, urlstr)
+	return b.client.NewRequest(msg, method, body)
 }
 
 func (b *Board) Do(req *http.Request, into interface{}) (*http.Response, error) {

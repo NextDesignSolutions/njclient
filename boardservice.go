@@ -1,6 +1,8 @@
-package main
+package njclient
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -21,6 +23,22 @@ func NewBoardService(client *Client) *BoardService {
 	// initialize services here
 
 	return b
+}
+
+func (bs *BoardService) GetBoard(board_id string) (*Board, error) {
+	b, ok := bs.Boards[board_id]
+	if ok == false {
+		return nil, errors.New(fmt.Sprintf("could not find board with ID %s", board_id))
+	} else {
+		return b, nil
+	}
+}
+
+func (bs *BoardService) GetSomeBoard() (*Board, error) {
+	for _, b := range bs.Boards {
+		return b, nil
+	}
+	return nil, errors.New("could not find a board")
 }
 
 func (bs *BoardService) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {

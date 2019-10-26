@@ -1,6 +1,7 @@
-package main
+package njclient
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -10,10 +11,11 @@ type FpgaInfo struct {
 }
 
 type Fpga struct {
-	client *FpgaService
-	Index  int
-	Name   string
-	Dna    string
+	client     *FpgaService
+	Index      int
+	Name       string
+	Dna        string
+	AxiService *AxiService
 }
 
 func (f *Fpga) UpdatefromInfo(fi *FpgaInfo) error {
@@ -26,11 +28,13 @@ func NewFpga(service *FpgaService) (*Fpga, error) {
 	f := Fpga{
 		client: service,
 	}
+	f.AxiService = NewAxiService(&f)
 	return &f, nil
 }
 
 func (f *Fpga) NewRequest(urlstr string, method string, body interface{}) (*http.Request, error) {
-	return f.client.NewRequest("/"+string(f.Index)+"/"+urlstr, method, body)
+	msg := fmt.Sprintf("/%d/%s", f.Index, urlstr)
+	return f.client.NewRequest(msg, method, body)
 }
 
 func (f *Fpga) Do(req *http.Request, into interface{}) (*http.Response, error) {

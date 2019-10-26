@@ -1,4 +1,4 @@
-package main
+package njclient
 
 import (
 	"bytes"
@@ -167,6 +167,24 @@ func main() {
 			}
 			for index, fpga := range fserv.Fpgas {
 				log.Printf("FPGA index %d NAME %s DNA %s\n", index, fpga.Name, fpga.Dna)
+				log.Printf("axi service: %s\n", fpga.AxiService)
+
+				attr := NewAxiCacheAttributes(true, true, false, false)
+				opts := NewAxiTransactionOptions(true, 4)
+				t := NewAxiTransaction(0xc0000000, true, opts, attr, nil)
+
+				axih := fpga.AxiService.GetAvailableAxiHandle()
+				if axih == nil {
+					log.Printf("Failed to get axi handle")
+				} else {
+					result, err := axih.IssueTransaction(t)
+					if err != nil {
+						log.Printf("AXI transaction failed! %s\n", err)
+					} else {
+						log.Printf("result.Response = %s\n", result.Response)
+						log.Printf("result.Value = %x\n", (*result.Value))
+					}
+				}
 			}
 		}
 	}
