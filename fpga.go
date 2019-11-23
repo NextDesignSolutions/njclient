@@ -18,6 +18,10 @@ type Fpga struct {
 	AxiService *AxiService
 }
 
+func (f *Fpga) Board() *Board {
+	return f.client.Board()
+}
+
 func (f *Fpga) UpdatefromInfo(fi *FpgaInfo) error {
 	f.Name = fi.Name
 	f.Dna = fi.Dna

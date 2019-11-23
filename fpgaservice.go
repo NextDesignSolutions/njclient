@@ -21,6 +21,10 @@ func NewFpgaService(client *Board) *FpgaService {
 	return b
 }
 
+func (fs *FpgaService) Board() *Board {
+	return fs.client
+}
+
 func (fs *FpgaService) GetFpga(index int) (*Fpga, error) {
 	if index >= len(fs.Fpgas) {
 		return nil, errors.New(fmt.Sprintf("could not find FPGA with index %d", index))
