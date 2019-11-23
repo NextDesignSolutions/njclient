@@ -70,7 +70,7 @@ func (ato *AxiTransactionOptions) generateQueryString() {
 	if ato.Incr_mode == true {
 		s += "+"
 	}
-	fmt.Printf("ato.Count = %d", ato.Count)
+	//fmt.Printf("ato.Count = %d", ato.Count)
 	cnt := fmt.Sprintf("?count=%d", ato.Count)
 	ato.Query_string = fmt.Sprintf("%s%s", s, cnt)
 }
