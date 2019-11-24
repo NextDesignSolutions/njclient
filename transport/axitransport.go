@@ -1,8 +1,8 @@
-package miner
+package transport
 
 import (
-	"bytes"
 	"encoding/binary"
+	"fmt"
 	"github.com/NextDesignSolutions/axitransport"
 	"github.com/NextDesignSolutions/bytehelpers"
 	"github.com/NextDesignSolutions/njclient"
@@ -24,7 +24,7 @@ type NextjtagAxiTransport struct {
 	mux        sync.Mutex
 }
 
-func NewClient(axi_handle *njclient.AxiHandle) (*NextjtagAxiTransport, err) {
+func NewClient(axi_handle *njclient.AxiHandle) (*NextjtagAxiTransport, error) {
 
 	default_cache_attr := njclient.NewAxiCacheAttributes(axitransport.BUFFERABLE,
 		axitransport.MODIFIABLE,
@@ -40,7 +40,7 @@ func NewClient(axi_handle *njclient.AxiHandle) (*NextjtagAxiTransport, err) {
 		axi:        axi_handle,
 		cache_attr: default_cache_attr,
 		incr_mode:  default_incr_mode,
-		endianess:  axitransport.LITTLE_ENDIAN,
+		endianess:  binary.LittleEndian,
 	}
 	return t, nil
 }
@@ -57,7 +57,7 @@ func (t *NextjtagAxiTransport) SetCacheAttributes(bufferable bool, modifiable bo
 	}
 	t.cache_attr = new_cache_attr
 	t.mux.Unlock()
-	return
+	return nil
 }
 
 func (t *NextjtagAxiTransport) SetIncrMode(mode bool) error {
@@ -85,14 +85,14 @@ func (t *NextjtagAxiTransport) AccessSizeCheck(size int) (err error) {
 }
 
 func (t *NextjtagAxiTransport) ReadAxi(addr uint64, size int) (data []byte, err error) {
-	err := t.AccessSizeCheck(size)
+	err = t.AccessSizeCheck(size)
 	if err != nil {
 		return nil, err
 	}
 	count := size / AXI_DATA_WIDTH
 	opts := njclient.NewAxiTransactionOptions(t.incr_mode, count)
 	if opts == nil {
-		return fmt.Errorf("failed to create AxiTransactionOptions")
+		return nil, fmt.Errorf("failed to create AxiTransactionOptions")
 	}
 
 	trans := njclient.NewAxiTransaction(addr, AXI_READ, opts, t.cache_attr, nil)
@@ -112,7 +112,7 @@ func (t *NextjtagAxiTransport) ReadAxi(addr uint64, size int) (data []byte, err 
 		return nil, fmt.Errorf("no data returned for AXI read addr:0x%08x size:0x%x", addr, size)
 	}
 
-	data, err := bytehelpers.Uint32sToBytes(*result.Value, t.endianess)
+	data, err = bytehelpers.Uint32sToBytes(*result.Value, t.endianess)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode data to bytes for AXI read addr:0x%08x size:0x%x", addr, size)
 	}
@@ -120,9 +120,9 @@ func (t *NextjtagAxiTransport) ReadAxi(addr uint64, size int) (data []byte, err 
 }
 func (t *NextjtagAxiTransport) WriteAxi(addr uint64, data []byte) (err error) {
 	size := len(data)
-	err := t.AccessSizeCheck(size)
+	err = t.AccessSizeCheck(size)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	count := size / AXI_DATA_WIDTH
 
@@ -138,16 +138,16 @@ func (t *NextjtagAxiTransport) WriteAxi(addr uint64, data []byte) (err error) {
 
 	trans := njclient.NewAxiTransaction(addr, AXI_WRITE, opts, t.cache_attr, &write_data)
 	if trans == nil {
-		return nil, fmt.Errorf("failed to create axi write transaction addr:0x%08x size:0x%x", addr, size)
+		return fmt.Errorf("failed to create axi write transaction addr:0x%08x size:0x%x", addr, size)
 	}
 
 	result, err := t.axi.IssueTransaction(trans)
 	if err != nil {
-		return nil, fmt.Errorf("AXI write failed addr:0x%08x size:0x%x", addr, size)
+		return fmt.Errorf("AXI write failed addr:0x%08x size:0x%x", addr, size)
 	}
 
 	if result.Response != "OKAY" {
-		return nil, fmt.Errorf("AXI read failed, received error from hardware, addr:0x%08x size:0x%x", addr, size)
+		return fmt.Errorf("AXI read failed, received error from hardware, addr:0x%08x size:0x%x", addr, size)
 	}
 	return nil
 }
@@ -171,11 +171,11 @@ func (t *NextjtagAxiTransport) WriteAxi32(addr uint64, value uint32) (err error)
 	if err != nil {
 		return err
 	}
-	err := t.WriteAxi(addr, d)
+	err = t.WriteAxi(addr, write_data)
 	return err
 }
 
-func (t *NextjtagAxiTransport) ReadAxi64(addr uint64) (value uint32, err error) {
+func (t *NextjtagAxiTransport) ReadAxi64(addr uint64) (value uint64, err error) {
 
 	data, err := t.ReadAxi(addr, 8)
 	if err != nil {
@@ -194,6 +194,6 @@ func (t *NextjtagAxiTransport) WriteAxi64(addr uint64, value uint64) (err error)
 	if err != nil {
 		return err
 	}
-	err := t.WriteAxi(addr, d)
+	err = t.WriteAxi(addr, write_data)
 	return err
 }
