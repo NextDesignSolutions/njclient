@@ -33,6 +33,13 @@ type NjtError struct {
 	Code int    `json:"code"`
 }
 
+type MinValueMaxError struct {
+	Min   float32   `json:"min`
+	Value float32   `json:"max`
+	Max   float32   `json:"max`
+	Error *NjtError `json:"error"`
+}
+
 type Client struct {
 	client       *http.Client
 	BaseURL      *url.URL
