@@ -47,23 +47,22 @@ func NewClient(axi_handle *njclient.AxiHandle) (*NextjtagAxiTransport, error) {
 
 func (t *NextjtagAxiTransport) SetCacheAttributes(bufferable bool, modifiable bool, read_alloc bool, write_alloc bool) error {
 	t.mux.Lock()
+	defer t.mux.Unlock()
 	new_cache_attr := njclient.NewAxiCacheAttributes(bufferable,
 		modifiable,
 		read_alloc,
 		write_alloc)
 	if new_cache_attr == nil {
-		t.mux.Unlock()
 		return fmt.Errorf("failed to generate new cache attributes")
 	}
 	t.cache_attr = new_cache_attr
-	t.mux.Unlock()
 	return nil
 }
 
 func (t *NextjtagAxiTransport) SetIncrMode(mode bool) error {
 	t.mux.Lock()
+	defer t.mux.Unlock()
 	t.incr_mode = mode
-	t.mux.Unlock()
 	return nil
 }
 func (t *NextjtagAxiTransport) SetEndianess(endian bool) error {
@@ -73,7 +72,6 @@ func (t *NextjtagAxiTransport) SetEndianess(endian bool) error {
 	} else {
 		t.endianess = binary.LittleEndian
 	}
-	t.mux.Unlock()
 	return nil
 }
 
